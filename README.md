@@ -77,23 +77,22 @@ const arham = {
 <!-- ![Scholastica Connect Screenshot](path/to/screenshot.png) -->
 [Live Demo](https://your-demo-link.com) | [Repository](https://github.com/arham766/scholastica-connect)
 
-## 📈 GitHub Stats
-
+## 📊 GitHub Activity
 <div align="center">
+  <!-- New Activity Graph -->
+  <img src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&theme=react-dark&hide_border=true&area=true" width="100%"/>
+
+  ## 📈 GitHub Stats
   <img height="180em" src="https://github-readme-stats.vercel.app/api?username=arham766&show_icons=true&theme=react&include_all_commits=true&count_private=true"/>
   <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=arham766&layout=compact&langs_count=7&theme=react"/>
+
+  <!-- Updated Snake Animation -->
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" />
+    <img alt="github-snake" src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" />
+  </picture>
 </div>
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/platane/snk/output/github-contribution-grid-snake-dark.svg" alt="Snake animation" />
-</div>
-
----
-
-<div align="center">
-  <img src="https://komarev.com/ghpvc/?username=arham766&label=Profile%20views&color=0e75b6&style=flat" alt="Profile views" />
-</div>
-
 ## Contributing
 I love collaborating with others! If you'd like to contribute to any of my projects:
 1. Fork the repository
