@@ -107,7 +107,6 @@ My projects are licensed under the MIT License unless otherwise specified. See i
 
 ## Contact
 Let's connect! Feel free to reach out through any of these channels:
-- 📧 Email: [marham27@wabash.edu](mailto:marham27@wabash.edu)
 - 💼 LinkedIn: [shahrierislamarham](https://www.linkedin.com/in/shahrierislamarham)
 <!-- -- 🌐 Personal Website: [-website.com](https://-website.com) -->
 <!-- - 🐦 Twitter: [@_handle](https://twitter.com/your_handle) -->
