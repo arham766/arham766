@@ -80,24 +80,33 @@ const arham = {
 
 ## 📊 GitHub Activity
 <div align="center">
-  <!-- Activity Graph -->
-  <img src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&theme=react-dark&hide_border=true&area=true" width="100%"/>
+  <!-- Activity Graph with enhanced styling -->
+  <a href="https://github.com/arham766/github-readme-activity-graph">
+    <img alt="Arham's Activity Graph" src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&theme=tokyo-night&hide_border=true&area=true" width="100%">
+  </a>
   
-  <!-- Streak Stats -->
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=arham766&theme=react&hide_border=true" alt="github streak" />
+  <!-- GitHub Stats in one row -->
+  <a href="https://github.com/arham766">
+    <img height="180em" src="https://github-readme-stats.vercel.app/api?username=arham766&show_icons=true&theme=tokyonight&include_all_commits=true&count_private=true"/>
+  </a>
+  <a href="https://github.com/arham766">
+    <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=arham766&layout=compact&langs_count=7&theme=tokyonight"/>
+  </a>
+  
+  <!-- GitHub Streak Stats -->
+  <a href="https://github.com/arham766">
+    <img src="https://github-readme-streak-stats.herokuapp.com/?user=arham766&theme=tokyonight&hide_border=true" alt="GitHub Streak Stats" />
+  </a>
 
-  ## 📈 GitHub Stats
-  <img height="180em" src="https://github-readme-stats.vercel.app/api?username=arham766&show_icons=true&theme=react&include_all_commits=true&count_private=true"/>
-  <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=arham766&layout=compact&langs_count=7&theme=react"/>
-
-  <!-- Snake Animation -->
+  <!-- Contribution Graph with Snake Animation -->
+  <h2>Contribution Graph</h2>
+  
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake-dark.svg" />
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" />
     <img alt="github-snake" src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" />
   </picture>
 </div>
-
 ---
 
 <div align="center">
