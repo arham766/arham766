@@ -68,7 +68,7 @@ const arham = {
 - Real-time preview system with Context API state management
 - Local storage persistence and modular component architecture
 <!-- ![Theme Switcher Screenshot](path/to/screenshot.png) -->
-[Live Demo](https://your-demo-link.com) | [Repository](https://github.com/arham766/theme-switcher)
+[Live Demo](https://toogle-theme-qqmb.onrender.com) | [Repository](https://github.com/arham766/Toogle_theme)
 
 ### 📊 Scholastica Connect
 - Flask-based organizational management platform
