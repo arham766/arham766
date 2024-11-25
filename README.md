@@ -10,11 +10,7 @@
   <a href="https://github.com/arham766"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
 </p>
 
-<!-- GitHub Trophy -->
 <img src="https://github-profile-trophy.vercel.app/?username=arham766&theme=darkhub&no-frame=true&row=1&column=6" alt="trophy" />
-
-<!-- Profile Views -->
-<img src="https://komarev.com/ghpvc/?username=arham766&label=Profile%20views&color=0e75b6&style=flat" alt="Profile views" />
 </div>
 
 ## 📋 Table of Contents
@@ -98,16 +94,17 @@ const arham = {
   <img src="https://github-readme-streak-stats.herokuapp.com/?user=arham766&theme=react&background=0D1117&hide_border=true" alt="GitHub Streak Stats" width="100%"/>
 
   <!-- Activity Graph -->
-  <a href="https://github.com/arham766/github-readme-activity-graph">
-    <img alt="Arham's Activity Graph" src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&theme=react-dark&hide_border=true&area=true&bg_color=0D1117" width="100%">
+  <a href="https://github.com/arham766">
+    <img alt="Arham's Activity Graph" src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&bg_color=0D1117&color=5BCDEC&line=5BCDEC&point=FFFFFF&area=true&hide_border=true" width="100%">
   </a>
 
   <!-- Snake Animation -->
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake-dark.svg"/>
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg"/>
-    <img alt="github-snake" src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg"/>
-  </picture>
+  <img src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" alt="Snake Animation" />
+
+</div>
+
+<div align="center">
+  <img src="https://komarev.com/ghpvc/?username=arham766&label=Profile%20views&color=0e75b6&style=flat" alt="Profile views" />
 </div>
 
 ## 🤝 Contributing
