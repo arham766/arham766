@@ -16,6 +16,7 @@
 - [About Me](#-about-me)
 - [Tech Stack](#️-tech-stack)
 - [Featured Projects](#-featured-projects)
+- [GitHub Activity](#-github-activity)
 - [GitHub Stats](#-github-stats)
 - [Contributing](#contributing)
 - [License](#license)
@@ -79,20 +80,30 @@ const arham = {
 
 ## 📊 GitHub Activity
 <div align="center">
-  <!-- New Activity Graph -->
+  <!-- Activity Graph -->
   <img src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&theme=react-dark&hide_border=true&area=true" width="100%"/>
+  
+  <!-- Streak Stats -->
+  <img src="https://github-readme-streak-stats.herokuapp.com/?user=arham766&theme=react&hide_border=true" alt="github streak" />
 
   ## 📈 GitHub Stats
   <img height="180em" src="https://github-readme-stats.vercel.app/api?username=arham766&show_icons=true&theme=react&include_all_commits=true&count_private=true"/>
   <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=arham766&layout=compact&langs_count=7&theme=react"/>
 
-  <!-- Updated Snake Animation -->
+  <!-- Snake Animation -->
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake-dark.svg" />
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" />
     <img alt="github-snake" src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" />
   </picture>
 </div>
+
+---
+
+<div align="center">
+  <img src="https://komarev.com/ghpvc/?username=arham766&label=Profile%20views&color=0e75b6&style=flat" alt="Profile views" />
+</div>
+
 ## Contributing
 I love collaborating with others! If you'd like to contribute to any of my projects:
 1. Fork the repository
@@ -106,6 +117,7 @@ My projects are licensed under the MIT License unless otherwise specified. See i
 
 ## Contact
 Let's connect! Feel free to reach out through any of these channels:
+- 📧 Email: [marham27@wabash.edu](mailto:marham27@wabash.edu)
 - 💼 LinkedIn: [shahrierislamarham](https://www.linkedin.com/in/shahrierislamarham)
 <!-- -- 🌐 Personal Website: [-website.com](https://-website.com) -->
 <!-- - 🐦 Twitter: [@_handle](https://twitter.com/your_handle) -->
