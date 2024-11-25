@@ -98,8 +98,8 @@ const arham = {
     <img alt="Arham's Activity Graph" src="https://github-readme-activity-graph.vercel.app/graph?username=arham766&bg_color=0D1117&color=5BCDEC&line=5BCDEC&point=FFFFFF&area=true&hide_border=true" width="100%">
   </a>
 
-  <!-- Snake Animation -->
-  <img src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" alt="Snake Animation" />
+  <!-- Snake Animation 
+  <img src="https://raw.githubusercontent.com/arham766/arham766/output/github-contribution-grid-snake.svg" alt="Snake Animation" />-->
 
 </div>
 
