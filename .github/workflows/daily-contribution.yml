@@ -1,45 +1,51 @@
 name: Daily Contribution
 on:
   schedule:
-    # Runs at 12am UTC
     - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
   daily-contribution:
     runs-on: ubuntu-latest
+    # Add permissions block to ensure proper access
     permissions:
       contents: write
-    
+      pages: write
+      id-token: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+        with:
+          fetch-depth: 0  # Required for generating contribution graph
+          
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.10'
           
       - name: Create daily update
         run: |
+          mkdir -p dist
           date "+%Y-%m-%d %H:%M:%S" > daily-update.txt
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add daily-update.txt
           git commit -m "Daily contribution update: $(date '+%Y-%m-%d')"
-          git push
+          git push origin HEAD:main
 
-      - name: Generate snake animation
+      - name: Generate Snake
         uses: Platane/snk@v3
+        id: snake-gif
         with:
-          github_user_name: arham766
-          outputs: |
-            dist/github-contribution-grid-snake.gif
-            dist/github-contribution-grid-snake.svg
+          github_user_name: ${{ github.repository_owner }}
+          svg_out_path: dist/github-contribution-grid-snake.svg
+          animation_out_path: dist/github-contribution-grid-snake.gif
 
-      - name: Push snake animation
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: output
+          force_orphan: true  # This ensures a clean deployment
