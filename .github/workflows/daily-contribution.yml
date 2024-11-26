@@ -26,17 +26,22 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'
+
+      - name: Create requirements file
+        run: |
+          echo "requests==2.31.0" > requirements.txt
+          echo "PyGithub==2.1.1" >> requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests PyGithub
+          pip install -r requirements.txt
 
       - name: Generate contribution stats
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p dist
           python - << EOF
           import os
           import json
@@ -52,12 +57,12 @@ jobs:
               'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
               'public_repos': user.public_repos,
               'followers': user.followers,
-              'contributions': 0,  # Will be calculated from events
+              'contributions': 0,
               'latest_activity': []
           }
           
           # Get recent activity
-          for event in user.get_events()[:10]:  # Last 10 events
+          for event in user.get_events()[:10]:
               stats['latest_activity'].append({
                   'type': event.type,
                   'repo': event.repo.name,
