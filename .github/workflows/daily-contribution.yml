@@ -1,13 +1,15 @@
-name: Daily Contribution
+name: Advanced Contribution Tracker
 on:
   schedule:
-    - cron: "0 0 * * *"
-  workflow_dispatch:
+    # Runs every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch:  # Allows manual trigger
+  push:
+    branches: [ main ]  # Runs on push to main branch
 
 jobs:
-  daily-contribution:
+  update-contribution:
     runs-on: ubuntu-latest
-    # Add permissions block to ensure proper access
     permissions:
       contents: write
       pages: write
@@ -17,30 +19,131 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Required for generating contribution graph
-          
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          
-      - name: Create daily update
-        run: |
-          mkdir -p dist
-          date "+%Y-%m-%d %H:%M:%S" > daily-update.txt
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add daily-update.txt
-          git commit -m "Daily contribution update: $(date '+%Y-%m-%d')"
-          git push origin HEAD:main
+          cache: 'pip'
 
-      - name: Generate Snake
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests PyGithub
+
+      - name: Generate contribution stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - << EOF
+          import os
+          import json
+          from datetime import datetime
+          from github import Github
+          
+          # Initialize GitHub client
+          g = Github(os.environ['GITHUB_TOKEN'])
+          user = g.get_user('${{ github.repository_owner }}')
+          
+          # Get current stats
+          stats = {
+              'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+              'public_repos': user.public_repos,
+              'followers': user.followers,
+              'contributions': 0,  # Will be calculated from events
+              'latest_activity': []
+          }
+          
+          # Get recent activity
+          for event in user.get_events()[:10]:  # Last 10 events
+              stats['latest_activity'].append({
+                  'type': event.type,
+                  'repo': event.repo.name,
+                  'created_at': event.created_at.strftime('%Y-%m-%d %H:%M:%S')
+              })
+          
+          # Save stats
+          with open('dist/contribution_stats.json', 'w') as f:
+              json.dump(stats, f, indent=2)
+          
+          # Create summary
+          with open('dist/summary.md', 'w') as f:
+              f.write(f"# Contribution Summary\n\n")
+              f.write(f"Last updated: {stats['timestamp']}\n\n")
+              f.write(f"- Public Repositories: {stats['public_repos']}\n")
+              f.write(f"- Followers: {stats['followers']}\n\n")
+              f.write("## Recent Activity\n\n")
+              for activity in stats['latest_activity']:
+                  f.write(f"- {activity['type']} in {activity['repo']} at {activity['created_at']}\n")
+          EOF
+
+      - name: Generate Snake Animation
         uses: Platane/snk@v3
         id: snake-gif
         with:
           github_user_name: ${{ github.repository_owner }}
-          svg_out_path: dist/github-contribution-grid-snake.svg
-          animation_out_path: dist/github-contribution-grid-snake.gif
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake.gif
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+            dist/github-contribution-grid-snake-light.svg?palette=github-light
+
+      - name: Generate HTML dashboard
+        run: |
+          cat > dist/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>GitHub Contribution Dashboard</title>
+              <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          </head>
+          <body class="bg-gray-900 text-white p-8">
+              <div class="max-w-4xl mx-auto">
+                  <h1 class="text-3xl font-bold mb-8">GitHub Activity Dashboard</h1>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                      <div class="bg-gray-800 p-6 rounded-lg">
+                          <h2 class="text-xl font-semibold mb-4">Contribution Graph</h2>
+                          <img src="github-contribution-grid-snake-dark.svg" alt="Contribution Graph" class="w-full">
+                      </div>
+                      
+                      <div class="bg-gray-800 p-6 rounded-lg">
+                          <h2 class="text-xl font-semibold mb-4">Activity Feed</h2>
+                          <div id="activity-feed" class="space-y-3">
+                              Loading...
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div class="text-sm text-gray-400 text-center">
+                      Last updated: <span id="last-updated">Loading...</span>
+                  </div>
+              </div>
+              
+              <script>
+                  fetch('contribution_stats.json')
+                      .then(response => response.json())
+                      .then(data => {
+                          document.getElementById('last-updated').textContent = data.timestamp;
+                          const feed = document.getElementById('activity-feed');
+                          feed.innerHTML = data.latest_activity
+                              .map(activity => `
+                                  <div class="p-3 bg-gray-700 rounded">
+                                      <div class="font-semibold">${activity.type}</div>
+                                      <div class="text-sm text-gray-300">${activity.repo}</div>
+                                      <div class="text-xs text-gray-400">${activity.created_at}</div>
+                                  </div>
+                              `)
+                              .join('');
+                      });
+              </script>
+          </body>
+          </html>
+          EOF
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -48,4 +151,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: output
-          force_orphan: true  # This ensures a clean deployment
+          force_orphan: true
+          enable_jekyll: false
+          commit_message: "🤖 Auto-update contribution dashboard"
