@@ -1,45 +1,45 @@
 name: Daily Contribution
-
 on:
   schedule:
-    # Runs at 12am UTC (adjust time as needed)
+    # Runs at 12am UTC
     - cron: "0 0 * * *"
-  # Allows manual trigger of the workflow
   workflow_dispatch:
 
 jobs:
   daily-contribution:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
           
       - name: Create daily update
         run: |
           date "+%Y-%m-%d %H:%M:%S" > daily-update.txt
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add daily-update.txt
           git commit -m "Daily contribution update: $(date '+%Y-%m-%d')"
           git push
 
       - name: Generate snake animation
-        uses: Platane/snk@master
-        id: snake-gif
+        uses: Platane/snk@v3
         with:
           github_user_name: arham766
-          gif_out_path: dist/github-contribution-grid-snake.gif
-          svg_out_path: dist/github-contribution-grid-snake.svg
+          outputs: |
+            dist/github-contribution-grid-snake.gif
+            dist/github-contribution-grid-snake.svg
 
       - name: Push snake animation
-        uses: crazy-max/ghaction-github-pages@v2.5.0
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          target_branch: output
-          build_dir: dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: output
