@@ -2,7 +2,7 @@ name: Advanced Contribution Tracker
 on:
   schedule:
     # Runs every 6 hours
-    - cron: "0 */6 * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch:  # Allows manual trigger
   push:
     branches: [ main ]  # Runs on push to main branch
