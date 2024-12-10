@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Contribution Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">GitHub Activity Dashboard</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Contribution Graph</h2>
+                <img src="github-contribution-grid-snake-dark.svg" alt="Contribution Graph" class="w-full">
+            </div>
+            
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Activity Feed</h2>
+                <div id="activity-feed" class="space-y-3">
+                    Loading...
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-sm text-gray-400 text-center">
+            Last updated: <span id="last-updated">Loading...</span>
+        </div>
+    </div>
+    
+    <script>
+        fetch('contribution_stats.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('last-updated').textContent = data.timestamp;
+                const feed = document.getElementById('activity-feed');
+                feed.innerHTML = data.latest_activity
+                    .map(activity => `
+                        <div class="p-3 bg-gray-700 rounded">
+                            <div class="font-semibold">${activity.type}</div>
+                            <div class="text-sm text-gray-300">${activity.repo}</div>
+                            <div class="text-xs text-gray-400">${activity.created_at}</div>
+                        </div>
+                    `)
+                    .join('');
+            });
+    </script>
+</body>
+</html>
