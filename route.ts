@@ -8,7 +8,21 @@ import { SkopApi } from "@/lib/skop-api"
 // Config / Constants
 // ========================
 const SKOP_API_KEY = process.env.SKOP_API_KEY || ""
-const BOARDBOOK_PATTERN = "meetings.boardbook.org/public/Organization/"
+
+// FIXED: More flexible BoardBook pattern matching
+function isBoardBookUrl(url: string): boolean {
+  const normalized = url.toLowerCase().trim()
+  return normalized.includes('meetings.boardbook.org/public/organization')
+}
+
+// FIXED: Ensure URL has protocol
+function normalizeUrl(url: string): string {
+  url = url.trim()
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `https://${url}`
+  }
+  return url
+}
 
 // Enhanced download strategies for different types of sites
 const DOWNLOAD_STRATEGIES = {
@@ -318,10 +332,14 @@ async function runSkopScrapeAndGetDocuments(websiteUrl: string) {
   }
 
   const skop = new SkopApi(SKOP_API_KEY)
+  
+  // FIXED: Normalize the URL before scraping
+  const normalizedUrl = normalizeUrl(websiteUrl)
+  console.log(`🌐 Normalized URL for scraping: ${normalizedUrl}`)
 
   // 1) Create scrape job
   const job = await skop.createScrapeJob({
-    website: websiteUrl,
+    website: normalizedUrl,
     prompt: "Extract all public meeting documents.",
     parameters: {
       single_page: false,
@@ -333,6 +351,8 @@ async function runSkopScrapeAndGetDocuments(websiteUrl: string) {
     },
   })
 
+  console.log(`📋 Scrape job created: ${job.job_id}`)
+
   // 2) Poll for completion (bounded)
   const MAX_WAIT_MS = 10 * 60 * 1000 // 10 minutes max waiting
   const POLL_INTERVAL_MS = 8000
@@ -340,14 +360,19 @@ async function runSkopScrapeAndGetDocuments(websiteUrl: string) {
   let status = await skop.getJobStatus(job.job_id)
 
   while (status.status === "pending" || status.status === "in_progress") {
-    if (Date.now() - start > MAX_WAIT_MS) break
+    if (Date.now() - start > MAX_WAIT_MS) {
+      throw new Error(`Scrape job timed out after 10 minutes`)
+    }
+    console.log(`⏳ Job ${job.job_id} status: ${status.status}, waiting...`)
     await new Promise(r => setTimeout(r, POLL_INTERVAL_MS))
     status = await skop.getJobStatus(job.job_id)
   }
 
   if (status.status !== "completed") {
-    throw new Error(`Scrape job not completed: ${status.status}`)
+    throw new Error(`Scrape job failed with status: ${status.status}`)
   }
+
+  console.log(`✅ Scrape job completed: ${job.job_id}`)
 
   // 3) Fetch results
   const results = await skop.getJobResults(job.job_id)
@@ -381,17 +406,24 @@ export async function POST(request: NextRequest) {
       url?: string
     }
 
-    // ==============================
-    // NEW: Auto-handle BoardBook URL
-    // ==============================
-    const possibleUrl = (websiteUrl || input || url || "").toString()
     let documents: any[] | undefined = documentsFromBody
 
-    if (possibleUrl && possibleUrl.includes(BOARDBOOK_PATTERN)) {
-      // Run the Skop scrape for the boardbook meetings URL to get all docs
+    // ==============================
+    // PRIORITY 1: Auto-detect and scrape BoardBook URLs
+    // This happens FIRST, before any other validation
+    // ==============================
+    const possibleUrl = (websiteUrl || input || url || "").toString().trim()
+    
+    if (possibleUrl && isBoardBookUrl(possibleUrl)) {
+      console.log(`🏢 BoardBook URL detected, auto-scraping: ${possibleUrl}`)
+      
       try {
-        const { documents: scrapedDocs, jobId: skopJobId, total } = await runSkopScrapeAndGetDocuments(possibleUrl)
-        console.log(`✅ Skop scrape complete for BoardBook (${total} docs, job ${skopJobId})`)
+        const { documents: scrapedDocs, jobId: skopJobId, total } = 
+          await runSkopScrapeAndGetDocuments(possibleUrl)
+        
+        console.log(`✅ BoardBook scrape complete: ${total} documents found (job: ${skopJobId})`)
+        
+        // Map scraped documents to expected format
         documents = scrapedDocs?.map((d, idx) => ({
           url: d.url,
           name: d.name || `document_${idx + 1}`,
@@ -400,20 +432,53 @@ export async function POST(request: NextRequest) {
           source_page: d.source_page || "",
           content_type: d.document_type || "application/pdf",
           global_index: idx,
+          confidence_score: d.confidence_score,
         })) || []
+        
+        if (!documents || documents.length === 0) {
+          return NextResponse.json(
+            { 
+              error: "No documents found at the BoardBook URL",
+              url: possibleUrl,
+              jobId: skopJobId
+            },
+            { status: 404 }
+          )
+        }
+        
       } catch (err: any) {
-        console.error("❌ Skop scrape failed:", err?.message || err)
-        return NextResponse.json({ error: "Failed to scrape BoardBook URL", detail: err?.message || String(err) }, { status: 502 })
+        console.error("❌ BoardBook scrape failed:", err)
+        return NextResponse.json(
+          { 
+            error: "Failed to scrape BoardBook URL", 
+            detail: err?.message || String(err),
+            url: possibleUrl
+          },
+          { status: 502 }
+        )
       }
     }
 
     // ==============================
-    // Existing validation / flow
+    // VALIDATION: Ensure we have documents to download
     // ==============================
-    // Validate inputs
     if (!documents || !Array.isArray(documents)) {
       return NextResponse.json(
-        { error: "Missing or invalid documents array" },
+        { 
+          error: "Missing or invalid documents array. Provide either a BoardBook URL or a documents array.",
+          receivedUrl: possibleUrl || null,
+          receivedDocuments: documentsFromBody ? 'provided but invalid' : 'not provided'
+        },
+        { status: 400 }
+      )
+    }
+
+    if (documents.length === 0) {
+      return NextResponse.json(
+        { 
+          error: "Documents array is empty",
+          receivedUrl: possibleUrl || null
+        },
         { status: 400 }
       )
     }
@@ -432,6 +497,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    console.log(`📦 Starting download of ${documents.length} documents...`)
 
     const zip = new JSZip()
     let successfulDownloads = 0
@@ -570,7 +637,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log final summary
-    console.log(`Download complete: ${successfulDownloads}/${documents.length} successful, ${failedDownloads} failed`)
+    console.log(`📥 Download complete: ${successfulDownloads}/${documents.length} successful, ${failedDownloads} failed`)
 
     if (successfulDownloads === 0) {
       return NextResponse.json(
@@ -593,7 +660,9 @@ export async function POST(request: NextRequest) {
     })
 
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')
-    const zipFileName = `skop-documents-${jobId || 'unknown'}-${timestamp}.zip`
+    const zipFileName = `skop-documents-${jobId || 'boardbook'}-${timestamp}.zip`
+
+    console.log(`📦 Returning ZIP: ${zipFileName} (${zipBuffer.length} bytes)`)
 
     // Return the ZIP file with enhanced headers
     return new NextResponse(new Uint8Array(zipBuffer), {
@@ -610,7 +679,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    // Silent error handling for production
+    console.error("❌ Route error:", error)
     return NextResponse.json(
       { 
         error: "Internal server error during download",
@@ -620,4 +689,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
