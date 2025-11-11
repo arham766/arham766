@@ -22,7 +22,12 @@ export const DEFAULT_SCRAPE_PARAMETERS: ScrapeParameters = {
   max_file_size_mb: 100
 }
 
-export type JobStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled'
+export type JobStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
 
 export interface JobCreateResponse {
   job_id: string
@@ -63,21 +68,7 @@ export interface JobResultsResponse {
   has_errors: boolean
   errors: JobError[]
   warnings: string[]
-  metadata?: {
-    scraper_breakdown?: {
-      total_cost: number
-      firecrawl_cost?: number
-      fast_scraper_cost?: number
-      firecrawl_pages?: number
-      fast_scraper_pages?: number
-    }
-    credit_exhausted?: boolean
-    total_pages_crawled?: number
-    extraction_method?: string
-    total_documents_found?: number
-    processing_time_seconds?: number
-    [key: string]: any
-  }
+  metadata?: Record<string, any>
 }
 
 export interface ExtractedDocument {
@@ -127,13 +118,16 @@ export class SkopApi {
     this.apiKey = apiKey
   }
 
-  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
     const url = `${SKOP_API_BASE_URL}${endpoint}`
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -158,13 +152,65 @@ export class SkopApi {
     return this.makeRequest('/health/')
   }
 
+  /**
+   * Simulated scrape job that downloads ZIP directly.
+   * Mimics pending → in_progress → completed transitions.
+   */
+  async createScrapeJob(request: ScrapeRequest): Promise<JobCreateResponse> {
+    const downloadApi = 'https://e02845e6ef7c.ngrok-free.app/download'
+    const jobId = `zip-job-${Date.now()}`
+    const now = new Date().toISOString()
+
+    // Step 1: Return fake “pending” immediately (UI will show [Extracting 0%])
+    const pendingJob: JobCreateResponse = {
+      job_id: jobId,
+      status: 'pending',
+      message: 'Preparing ZIP download...',
+      created_at: now,
+      estimated_completion: new Date(Date.now() + 10000).toISOString(),
+    }
+
+    // Simulate background job flow
+    setTimeout(async () => {
+      console.log(`[ZIP JOB] Job ${jobId} → in_progress`)
+      try {
+        const response = await fetch(downloadApi)
+        if (!response.ok) {
+          throw new SkopApiError(
+            `Failed to download ZIP`,
+            response.status,
+            '/download',
+            new Date().toISOString()
+          )
+        }
+
+        // Simulate some processing delay
+        await new Promise((res) => setTimeout(res, 2000))
+
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'scraped-files.zip'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
+
+        console.log(`[ZIP JOB] Job ${jobId} → completed`)
+      } catch (err) {
+        console.error(`[ZIP JOB] Error during download:`, err)
+      }
+    }, 2000)
+
+    return pendingJob
+  }
+
+  /** Still supports backend-driven downloads if needed */
   async downloadAllFiles(): Promise<Blob> {
     const url = `${SKOP_API_BASE_URL}/download-all`
-    
     const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
+      headers: { Authorization: `Bearer ${this.apiKey}` },
     })
 
     if (!response.ok) {
@@ -176,76 +222,14 @@ export class SkopApi {
         new Date().toISOString()
       )
     }
-
     return await response.blob()
-  }
-
-  /**
-   * Simulated scraping job that calls FastAPI ZIP endpoint.
-   * Mimics pending → in_progress → completed transitions.
-   */
-  async createScrapeJob(request: ScrapeRequest): Promise<JobCreateResponse> {
-    const downloadApi = "https://e02845e6ef7c.ngrok-free.app/download"
-    const now = new Date().toISOString()
-    const jobId = `zip-job-${Date.now()}`
-
-    // Step 1: Return fake "pending" state immediately
-    const pendingJob: JobCreateResponse = {
-      job_id: jobId,
-      status: 'pending',
-      message: 'Preparing download...',
-      created_at: now,
-      estimated_completion: new Date(Date.now() + 5000).toISOString(),
-    }
-
-    // Step 2: Simulate progress delay (so UI shows "extracting" or "processing")
-    setTimeout(async () => {
-      try {
-        console.log(`[ZIP JOB] Starting download from: ${downloadApi}`)
-        const response = await fetch(downloadApi)
-
-        if (!response.ok) {
-          throw new SkopApiError(
-            `Failed to download ZIP file`,
-            response.status,
-            '/download',
-            new Date().toISOString()
-          )
-        }
-
-        // Simulate "in_progress" for 2 seconds
-        console.log(`[ZIP JOB] Download in progress...`)
-        await new Promise(res => setTimeout(res, 2000))
-
-        // Convert to Blob and trigger download
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'boardbook.zip'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        window.URL.revokeObjectURL(url)
-
-        console.log(`[ZIP JOB] Download complete!`)
-
-        // Notify UI (fake backend status update)
-        // You could call a local state manager or Supabase insert here if needed.
-      } catch (error) {
-        console.error('Error downloading ZIP:', error)
-      }
-    }, 2000)
-
-    // Return "pending" immediately so UI shows job started
-    return pendingJob
   }
 
   async downloadFromInputUrl(websiteUrl: string): Promise<Blob> {
     const response = await fetch(`${SKOP_API_BASE_URL}/download-from-urls`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify([{ url: websiteUrl }]),
@@ -273,9 +257,7 @@ export class SkopApi {
   }
 
   async cancelJob(jobId: string): Promise<void> {
-    return this.makeRequest(`/scrape/${jobId}`, {
-      method: 'DELETE',
-    })
+    return this.makeRequest(`/scrape/${jobId}`, { method: 'DELETE' })
   }
 }
 
