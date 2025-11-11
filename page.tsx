@@ -273,27 +273,37 @@ const handleSendClick = async () => {
 
   toast.success("Starting simulated scraping...")
 
-  // Animate progress from 0 → 100% over 10 seconds
-  const duration = 10000 // 10s
-  const start = Date.now()
+const duration = 10000 // 10 seconds total
+const start = Date.now()
 
-  const timer = setInterval(() => {
-    const elapsed = Date.now() - start
-    const pct = Math.min((elapsed / duration) * 100, 100)
-    setProgress(pct)
-if (pct >= 100) {
-  clearInterval(timer)
-  setTimeout(() => {
-    setIsProcessing(false)
-    setIsCompleted(true)
-    toast.success("Found 6000 documents! Preparing ZIP...")
+const timer = setInterval(() => {
+  const elapsed = Date.now() - start
+  const pct = Math.min((elapsed / duration) * 100, 100)
+  setProgress(pct)
 
-    // 🚀 Automatically show and trigger the ZIP download view
+  if (pct >= 100) {
+    clearInterval(timer)
+
+    // Finish the fake scraping phase
     setTimeout(() => {
-      downloadAllDocuments()
-    }, 1000)
-  }, 500)
-}
+      setIsProcessing(false)
+      setIsCompleted(true)
+      toast.success("Found 6000 documents! Preparing ZIP...")
+
+      // 🚀 Automatically show and trigger the ZIP download
+      setTimeout(async () => {
+        try {
+          await downloadAllDocuments()
+          toast.success("ZIP download started!")
+        } catch (err) {
+          toast.error("Failed to start download.")
+          console.error(err)
+        }
+      }, 1000)
+    }, 500)
+  }
+}, 100)
+
 
 
 
