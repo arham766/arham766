@@ -239,73 +239,58 @@ function TestContent() {
   }
 
 const handleSendClick = async () => {
-  // Sanitize inputs
-  const sanitizedPrompt = sanitizePrompt(mainInput)
-  const sanitizedWebsite = sanitizeUrl(website)
-  
-  if (!sanitizedPrompt || !sanitizedWebsite) {
-    toast.error('Please provide valid inputs')
-    return
-  }
+    const sanitizedPrompt = sanitizePrompt(mainInput);
+    const sanitizedWebsite = sanitizeUrl(website);
 
-  // Check if user is authenticated
-  if (!user) {
-    const formData = {
-      prompt: sanitizedPrompt,
-      website: sanitizedWebsite,
-      isMultipage,
-      isForm,
-      timestamp: Date.now()
+    if (!sanitizedPrompt || !sanitizedWebsite) {
+      toast.error("Please provide valid inputs");
+      return;
     }
-    localStorage.setItem('skop_pending_job', JSON.stringify(formData))
-    toast.info("Please sign in to continue with your scraping job")
-    router.push('/sign-in')
-    return
-  }
 
-  // ✅ Simulated scraping process (no Supabase / API call)
-  setIsProcessing(true)
-  setProgress(0)
-  setIsCompleted(false)
-  setIsTimeout(false)
-  setStartTime(Date.now())
-  setDots("")
+    if (!user) {
+      localStorage.setItem(
+        "skop_pending_job",
+        JSON.stringify({ prompt: sanitizedPrompt, website: sanitizedWebsite, isMultipage, isForm, timestamp: Date.now() })
+      );
+      toast.info("Please sign in to continue with your scraping job");
+      router.push("/sign-in");
+      return;
+    }
 
-  toast.success("Starting simulated scraping...")
+    setIsProcessing(true);
+    setProgress(0);
+    setIsCompleted(false);
+    setIsTimeout(false);
+    setStartTime(Date.now());
+    setDots("");
+    toast.success("Starting simulated scraping...");
 
-const duration = 10000 // 10 seconds total
-const start = Date.now()
+    const duration = 10000;
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min((elapsed / duration) * 100, 100);
+      setProgress(pct);
 
-const timer = setInterval(() => {
-  const elapsed = Date.now() - start
-  const pct = Math.min((elapsed / duration) * 100, 100)
-  setProgress(pct)
-
-  if (pct >= 100) {
-    clearInterval(timer)
-
-    // Finish the fake scraping phase
-    setTimeout(() => {
-      setIsProcessing(false)
-      setIsCompleted(true)
-      toast.success("Found 6000 documents! Preparing ZIP...")
-
-      // 🚀 Automatically show and trigger the ZIP download
-      setTimeout(async () => {
-        try {
-          await downloadAllDocuments()
-          toast.success("ZIP download started!")
-        } catch (err) {
-          toast.error("Failed to start download.")
-          console.error(err)
-        }
-      }, 1000)
-    }, 500)
-  }
-}, 100)
-
-
-
+      if (pct >= 100) {
+        clearInterval(timer);
+        setTimeout(() => {
+          setIsProcessing(false);
+          setIsCompleted(true);
+          toast.success("Found 6000 documents! Preparing ZIP...");
+          setTimeout(async () => {
+            try {
+              await downloadAllDocuments();
+              toast.success("ZIP download started!");
+            } catch (err) {
+              toast.error("Failed to start download.");
+              console.error(err);
+            }
+          }, 1000);
+        }, 500);
+      }
+    }, 100);
+  };
 
   const handleCancelClick = () => {
     setIsProcessing(false)
