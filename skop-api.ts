@@ -111,12 +111,6 @@ class SkopApiError extends Error {
   }
 }
 
-/**
- * This SkopApi simulates a real scraping process:
- * - Returns “pending” so your UI shows progress
- * - Waits a few seconds, triggers a ZIP download
- * - Then signals “completed” so frontend switches to success panel
- */
 export class SkopApi {
   private apiKey: string
 
@@ -159,15 +153,15 @@ export class SkopApi {
   }
 
   /**
-   * Simulated scrape + ZIP download process.
-   * Returns fake job states and triggers the ZIP download automatically.
+   * Simulated scraping flow that ends in a ZIP download (real 142MB file).
    */
   async createScrapeJob(request: ScrapeRequest): Promise<JobCreateResponse> {
     const downloadApi = 'https://e02845e6ef7c.ngrok-free.app/download'
     const jobId = `zip-job-${Date.now()}`
     const now = new Date().toISOString()
 
-    // Step 1️⃣: Return fake “pending” job instantly so UI starts progress animation
+    console.log(`🟡 [SKOP] Starting fake scrape job ${jobId}...`)
+
     const pendingJob: JobCreateResponse = {
       job_id: jobId,
       status: 'pending',
@@ -176,27 +170,45 @@ export class SkopApi {
       estimated_completion: new Date(Date.now() + 10000).toISOString(),
     }
 
-    // Step 2️⃣: After 2s → simulate job start
+    // Step 1️⃣ - show “in progress” in logs
     setTimeout(() => {
-      console.log(`[ZIP JOB] ${jobId} → in_progress`)
+      console.log(`🟢 [SKOP] Job ${jobId} → in_progress (simulated)`)
     }, 2000)
 
-    // Step 3️⃣: After 10s → trigger ZIP download and mark complete
+    // Step 2️⃣ - trigger download after 10 seconds
     setTimeout(async () => {
       try {
-        console.log(`[ZIP JOB] ${jobId} → downloading from ${downloadApi}`)
-        const res = await fetch(downloadApi)
+        console.log(`📦 [SKOP] Starting ZIP download from: ${downloadApi}`)
 
-        if (!res.ok) {
+        const response = await fetch(downloadApi, {
+          method: 'GET',
+          mode: 'cors',
+          redirect: 'follow',
+          headers: {
+            Accept: 'application/zip',
+          },
+        })
+
+        console.log(`📡 [SKOP] Response → ${response.status} ${response.statusText}`)
+
+        if (!response.ok) {
+          const errText = await response.text()
+          console.error(`❌ [SKOP] Download failed → ${errText}`)
           throw new SkopApiError(
-            'Failed to download ZIP',
-            res.status,
+            errText || 'Failed to download ZIP',
+            response.status,
             '/download',
             new Date().toISOString()
           )
         }
 
-        const blob = await res.blob()
+        const blob = await response.blob()
+        console.log(`💾 [SKOP] Blob size: ${(blob.size / (1024 * 1024)).toFixed(2)} MB`)
+
+        if (blob.size < 1000000) {
+          console.warn('⚠️ [SKOP] ZIP seems too small — check backend or CORS setup.')
+        }
+
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -206,13 +218,13 @@ export class SkopApi {
         document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
 
-        console.log(`[ZIP JOB] ${jobId} → completed successfully`)
+        console.log(`✅ [SKOP] Job ${jobId} → completed successfully!`)
       } catch (err) {
-        console.error(`[ZIP JOB] ${jobId} → download failed`, err)
+        console.error(`🔥 [SKOP] Error during ZIP download:`, err)
       }
 
-      // Fake a backend completion signal so frontend shows the success state
-      const fakeCompletedJob: JobCreateResponse = {
+      // Step 3️⃣ - fake job complete event for UI
+      const completedJob: JobCreateResponse = {
         job_id: jobId,
         status: 'completed',
         message: '6000 documents found and ZIP ready for download.',
@@ -220,17 +232,14 @@ export class SkopApi {
         estimated_completion: new Date(Date.now() + 10000).toISOString(),
       }
 
-      // Dispatch a synthetic event your UI can catch (optional)
       window.dispatchEvent(
-        new CustomEvent('skop-job-completed', { detail: fakeCompletedJob })
+        new CustomEvent('skop-job-completed', { detail: completedJob })
       )
     }, 10000)
 
-    // Return initial state immediately
     return pendingJob
   }
 
-  /** Optional backend ZIP download fallback */
   async downloadAllFiles(): Promise<Blob> {
     const url = `${SKOP_API_BASE_URL}/download-all`
     const response = await fetch(url, {
