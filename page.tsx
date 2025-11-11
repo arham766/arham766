@@ -281,16 +281,20 @@ const handleSendClick = async () => {
     const elapsed = Date.now() - start
     const pct = Math.min((elapsed / duration) * 100, 100)
     setProgress(pct)
-    if (pct >= 100) {
-      clearInterval(timer)
-      setTimeout(() => {
-        setIsProcessing(false)
-        setIsCompleted(true)
-        toast.success("Found 6000 documents!")
-      }, 500)
-    }
-  }, 100)
+if (pct >= 100) {
+  clearInterval(timer)
+  setTimeout(() => {
+    setIsProcessing(false)
+    setIsCompleted(true)
+    toast.success("Found 6000 documents! Preparing ZIP...")
+
+    // 🚀 Automatically show and trigger the ZIP download view
+    setTimeout(() => {
+      downloadAllDocuments()
+    }, 1000)
+  }, 500)
 }
+
 
 
   const handleCancelClick = () => {
