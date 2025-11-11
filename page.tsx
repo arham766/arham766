@@ -242,11 +242,13 @@ const handleSendClick = async () => {
   const sanitizedPrompt = sanitizePrompt(mainInput);
   const sanitizedWebsite = sanitizeUrl(website);
 
+  // --- Validate inputs ---
   if (!sanitizedPrompt || !sanitizedWebsite) {
     toast.error("Please provide valid inputs");
     return;
   }
 
+  // --- Handle unauthenticated user ---
   if (!user) {
     localStorage.setItem(
       "skop_pending_job",
@@ -263,16 +265,16 @@ const handleSendClick = async () => {
     return;
   }
 
-  // --- Initialize UI state ---
+  // --- Initialize state ---
   setIsProcessing(true);
   setProgress(0);
   setIsCompleted(false);
   setIsTimeout(false);
   setStartTime(Date.now());
   setDots("");
-  toast.loading("Starting simulated scraping...");
+  toast.loading("🚀 Starting simulated scraping...");
 
-  const duration = 10000; // 10 seconds fake scraping
+  const duration = 10000; // fake scraping = 10s
   const start = Date.now();
 
   const timer = setInterval(() => {
@@ -280,20 +282,31 @@ const handleSendClick = async () => {
     const pct = Math.min((elapsed / duration) * 100, 100);
     setProgress(pct);
 
+    // --- When done ---
     if (pct >= 100) {
       clearInterval(timer);
 
       setTimeout(async () => {
         toast.dismiss();
-        toast.success("Found 6000 documents! Preparing ZIP...");
+        toast.success("📄 Found 6000 documents! Preparing ZIP...");
 
         try {
-          // --- Trigger ZIP download ---
-          const res = await fetch("https://e02845e6ef7c.ngrok-free.app/download");
+          // ✅ Properly configured fetch with safe headers
+          const res = await fetch("https://e02845e6ef7c.ngrok-free.app/download", {
+            method: "GET",
+            headers: {
+              "Accept": "application/zip",
+            },
+            mode: "cors",
+            cache: "no-store",
+          });
+
           if (!res.ok) throw new Error(`Download failed: ${res.statusText}`);
 
           const blob = await res.blob();
           const url = window.URL.createObjectURL(blob);
+
+          // --- Trigger ZIP download ---
           const a = document.createElement("a");
           a.href = url;
           a.download = "scraped-documents.zip";
@@ -304,7 +317,7 @@ const handleSendClick = async () => {
 
           toast.success("✅ ZIP download started!");
 
-          // --- Reset UI back to initial panel after 2s ---
+          // --- Reset UI back to initial clean panel ---
           setTimeout(() => {
             setIsProcessing(false);
             setIsCompleted(false);
@@ -325,6 +338,7 @@ const handleSendClick = async () => {
     }
   }, 100);
 };
+
 
   const handleCancelClick = () => {
     setIsProcessing(false)
