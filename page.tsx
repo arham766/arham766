@@ -239,58 +239,92 @@ function TestContent() {
   }
 
 const handleSendClick = async () => {
-    const sanitizedPrompt = sanitizePrompt(mainInput);
-    const sanitizedWebsite = sanitizeUrl(website);
+  const sanitizedPrompt = sanitizePrompt(mainInput);
+  const sanitizedWebsite = sanitizeUrl(website);
 
-    if (!sanitizedPrompt || !sanitizedWebsite) {
-      toast.error("Please provide valid inputs");
-      return;
-    }
+  if (!sanitizedPrompt || !sanitizedWebsite) {
+    toast.error("Please provide valid inputs");
+    return;
+  }
 
-    if (!user) {
-      localStorage.setItem(
-        "skop_pending_job",
-        JSON.stringify({ prompt: sanitizedPrompt, website: sanitizedWebsite, isMultipage, isForm, timestamp: Date.now() })
-      );
-      toast.info("Please sign in to continue with your scraping job");
-      router.push("/sign-in");
-      return;
-    }
+  if (!user) {
+    localStorage.setItem(
+      "skop_pending_job",
+      JSON.stringify({
+        prompt: sanitizedPrompt,
+        website: sanitizedWebsite,
+        isMultipage,
+        isForm,
+        timestamp: Date.now(),
+      })
+    );
+    toast.info("Please sign in to continue with your scraping job");
+    router.push("/sign-in");
+    return;
+  }
 
-    setIsProcessing(true);
-    setProgress(0);
-    setIsCompleted(false);
-    setIsTimeout(false);
-    setStartTime(Date.now());
-    setDots("");
-    toast.success("Starting simulated scraping...");
+  // --- Initialize UI state ---
+  setIsProcessing(true);
+  setProgress(0);
+  setIsCompleted(false);
+  setIsTimeout(false);
+  setStartTime(Date.now());
+  setDots("");
+  toast.loading("Starting simulated scraping...");
 
-    const duration = 10000;
-    const start = Date.now();
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const pct = Math.min((elapsed / duration) * 100, 100);
-      setProgress(pct);
+  const duration = 10000; // 10 seconds fake scraping
+  const start = Date.now();
 
-      if (pct >= 100) {
-        clearInterval(timer);
-        setTimeout(() => {
+  const timer = setInterval(() => {
+    const elapsed = Date.now() - start;
+    const pct = Math.min((elapsed / duration) * 100, 100);
+    setProgress(pct);
+
+    if (pct >= 100) {
+      clearInterval(timer);
+
+      setTimeout(async () => {
+        toast.dismiss();
+        toast.success("Found 6000 documents! Preparing ZIP...");
+
+        try {
+          // --- Trigger ZIP download ---
+          const res = await fetch("https://e02845e6ef7c.ngrok-free.app/download");
+          if (!res.ok) throw new Error(`Download failed: ${res.statusText}`);
+
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "scraped-documents.zip";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+
+          toast.success("✅ ZIP download started!");
+
+          // --- Reset UI back to initial panel after 2s ---
+          setTimeout(() => {
+            setIsProcessing(false);
+            setIsCompleted(false);
+            setProgress(0);
+            setWebsite("");
+            setMainInput("");
+            setJobStatus("idle");
+            setCurrentJob(null);
+            setDots("");
+          }, 2000);
+        } catch (err) {
+          console.error("Download error:", err);
+          toast.error("❌ Failed to start download. Please try again.");
           setIsProcessing(false);
-          setIsCompleted(true);
-          toast.success("Found 6000 documents! Preparing ZIP...");
-          setTimeout(async () => {
-            try {
-              await downloadAllDocuments();
-              toast.success("ZIP download started!");
-            } catch (err) {
-              toast.error("Failed to start download.");
-              console.error(err);
-            }
-          }, 1000);
-        }, 500);
-      }
-    }, 100);
-  };
+          setIsCompleted(false);
+        }
+      }, 1000);
+    }
+  }, 100);
+};
 
   const handleCancelClick = () => {
     setIsProcessing(false)
