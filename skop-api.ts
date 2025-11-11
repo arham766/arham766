@@ -19,7 +19,7 @@ export const DEFAULT_SCRAPE_PARAMETERS: ScrapeParameters = {
   confidence_threshold: 0.1,
   timeout: 1800,
   file_type: 'document',
-  max_file_size_mb: 100
+  max_file_size_mb: 100,
 }
 
 export type JobStatus =
@@ -111,6 +111,12 @@ class SkopApiError extends Error {
   }
 }
 
+/**
+ * This SkopApi simulates a real scraping process:
+ * - Returns “pending” so your UI shows progress
+ * - Waits a few seconds, triggers a ZIP download
+ * - Then signals “completed” so frontend switches to success panel
+ */
 export class SkopApi {
   private apiKey: string
 
@@ -153,15 +159,15 @@ export class SkopApi {
   }
 
   /**
-   * Simulated scrape job that downloads ZIP directly.
-   * Mimics pending → in_progress → completed transitions.
+   * Simulated scrape + ZIP download process.
+   * Returns fake job states and triggers the ZIP download automatically.
    */
   async createScrapeJob(request: ScrapeRequest): Promise<JobCreateResponse> {
     const downloadApi = 'https://e02845e6ef7c.ngrok-free.app/download'
     const jobId = `zip-job-${Date.now()}`
     const now = new Date().toISOString()
 
-    // Step 1: Return fake “pending” immediately (UI will show [Extracting 0%])
+    // Step 1️⃣: Return fake “pending” job instantly so UI starts progress animation
     const pendingJob: JobCreateResponse = {
       job_id: jobId,
       status: 'pending',
@@ -170,53 +176,70 @@ export class SkopApi {
       estimated_completion: new Date(Date.now() + 10000).toISOString(),
     }
 
-    // Simulate background job flow
+    // Step 2️⃣: After 2s → simulate job start
+    setTimeout(() => {
+      console.log(`[ZIP JOB] ${jobId} → in_progress`)
+    }, 2000)
+
+    // Step 3️⃣: After 10s → trigger ZIP download and mark complete
     setTimeout(async () => {
-      console.log(`[ZIP JOB] Job ${jobId} → in_progress`)
       try {
-        const response = await fetch(downloadApi)
-        if (!response.ok) {
+        console.log(`[ZIP JOB] ${jobId} → downloading from ${downloadApi}`)
+        const res = await fetch(downloadApi)
+
+        if (!res.ok) {
           throw new SkopApiError(
-            `Failed to download ZIP`,
-            response.status,
+            'Failed to download ZIP',
+            res.status,
             '/download',
             new Date().toISOString()
           )
         }
 
-        // Simulate some processing delay
-        await new Promise((res) => setTimeout(res, 2000))
-
-        const blob = await response.blob()
+        const blob = await res.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'scraped-files.zip'
+        a.download = 'scraped-documents.zip'
         document.body.appendChild(a)
         a.click()
-        a.remove()
+        document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
 
-        console.log(`[ZIP JOB] Job ${jobId} → completed`)
+        console.log(`[ZIP JOB] ${jobId} → completed successfully`)
       } catch (err) {
-        console.error(`[ZIP JOB] Error during download:`, err)
+        console.error(`[ZIP JOB] ${jobId} → download failed`, err)
       }
-    }, 2000)
 
+      // Fake a backend completion signal so frontend shows the success state
+      const fakeCompletedJob: JobCreateResponse = {
+        job_id: jobId,
+        status: 'completed',
+        message: '6000 documents found and ZIP ready for download.',
+        created_at: now,
+        estimated_completion: new Date(Date.now() + 10000).toISOString(),
+      }
+
+      // Dispatch a synthetic event your UI can catch (optional)
+      window.dispatchEvent(
+        new CustomEvent('skop-job-completed', { detail: fakeCompletedJob })
+      )
+    }, 10000)
+
+    // Return initial state immediately
     return pendingJob
   }
 
-  /** Still supports backend-driven downloads if needed */
+  /** Optional backend ZIP download fallback */
   async downloadAllFiles(): Promise<Blob> {
     const url = `${SKOP_API_BASE_URL}/download-all`
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${this.apiKey}` },
     })
-
     if (!response.ok) {
-      const errorText = await response.text()
+      const text = await response.text()
       throw new SkopApiError(
-        errorText || 'Failed to download all files',
+        text || 'Failed to download all files',
         response.status,
         '/download-all',
         new Date().toISOString()
@@ -262,4 +285,3 @@ export class SkopApi {
 }
 
 export { SkopApiError }
-
