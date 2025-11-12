@@ -296,6 +296,7 @@ const handleSendClick = async () => {
             method: "GET",
             headers: {
               "Accept": "application/zip",
+              "ngrok-skip-browser-warning": "true",
             },
             mode: "cors",
             cache: "no-store",
@@ -353,17 +354,23 @@ const handleSendClick = async () => {
   }
 
 
- const downloadAllDocuments = async () => {
+const downloadAllDocuments = async () => {
   setIsDownloading(true)
   try {
     toast.success("Preparing ZIP...")
-
+    
     const response = await fetch("https://e02845e6ef7c.ngrok-free.app/download", {
       method: "GET",
+      headers: {
+        "Accept": "application/zip",
+        "ngrok-skip-browser-warning": "true",  // ← This fixes the ngrok issue
+      },
+      mode: "cors",
+      cache: "no-store",
     })
-
+    
     if (!response.ok) throw new Error(`Failed (${response.status})`)
-
+    
     const blob = await response.blob()
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -373,7 +380,7 @@ const handleSendClick = async () => {
     a.click()
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
-
+    
     toast.success("Download complete!")
   } catch (err) {
     toast.error(err instanceof Error ? err.message : "Download failed")
@@ -381,7 +388,6 @@ const handleSendClick = async () => {
     setIsDownloading(false)
   }
 }
-
   return (
     <div className="p-6">
       <div className="space-y-12">
