@@ -1,19 +1,19 @@
 ### Hello there 👋
 
-#### A Full-Stack Engineer by day ☼ and a Dark-Matter Physicist by night ☾
+#### A Backend & Infrastructure Engineer by day ☼ and a Dark-Matter Physicist by night ☾
 
-Building [Clutch](https://github.com/arham766/clutch-production) — live video support for hardware, an AI agent that *sees* the problem;<br>
-Contributing to [facebook/astryx](https://github.com/facebook/astryx) — Meta's open-source design system;<br>
+Building the backend of [Clutch](https://github.com/arham766/clutch-production) — live video support for hardware: real-time pipelines, APIs, deploys;<br>
+Contributing to [facebook/astryx](https://github.com/facebook/astryx) — Meta's open-source design system, mostly internals & release tooling;<br>
 
-- ⚙️ I use daily: `.py`, `.ts`, `.tsx`, `.ipynb`, `.yml`, `.sql`
-- 🌌 I infer **ultralight dark matter** parameters from 106 galaxy rotation curves — [JAX/NumPyro pipeline](https://github.com/arham766/uldm-sparc-hbi)
-- 🔬 Simulated: [avalanche multiplication in SiPMs](https://github.com/arham766/sipm-monte-carlo), [soliton-core galaxy rotation](https://github.com/arham766/ULDM-Galaxy-Simulator)
-- 💬 `ping` me about **react server components**, **release tooling**, **bayesian inference**, **product engineering**
+- ⚙️ I use daily: `.py`, `.ts`, `.sql`, `.yml`, `Dockerfile`, `.sh`
+- 🏗️ I like systems with many moving parts — queues, schedulers, release trains, [Monte Carlo engines](https://github.com/arham766/sipm-monte-carlo)
+- 🌌 By night: inferring **ultralight dark matter** parameters from 106 galaxy rotation curves — [JAX/NumPyro pipeline](https://github.com/arham766/uldm-sparc-hbi)
+- 💬 `ping` me about **distributed backends**, **CI/CD & release tooling**, **postgres**, **bayesian inference**
 
 #### Recent open source — [facebook/astryx](https://github.com/facebook/astryx)
 
+- ✅ **Merged** · [#3387](https://github.com/facebook/astryx/pull/3387) keep publishing canary packages after one package's publish fails — one bad package shouldn't derail the release train
 - ✅ **Merged** · [#3380](https://github.com/facebook/astryx/pull/3380) guard Pagination `pageSize` against `0`/`NaN`/negatives
-- ✅ **Merged** · [#3387](https://github.com/facebook/astryx/pull/3387) keep publishing canary packages after one package's publish fails
 - 🔍 In review · [#3466](https://github.com/facebook/astryx/pull/3466) make Table column utilities callable from React Server Components
 - 🔍 In review · [#3464](https://github.com/facebook/astryx/pull/3464) parse dotted meridiems in time input · [#3332](https://github.com/facebook/astryx/pull/3332) Carousel docs · [#3331](https://github.com/facebook/astryx/pull/3331) Windows docs tooling
 
@@ -25,3 +25,7 @@ Contributing to [facebook/astryx](https://github.com/facebook/astryx) — Meta's
 </a>
 
 📫 [arhamislam766@yahoo.com](mailto:arhamislam766@yahoo.com) · [LinkedIn](https://www.linkedin.com/in/shahrierislamarham)
+
+---
+
+> There are only two hard things in computer science: cache invalidation, naming things, and off-by-one errors.
