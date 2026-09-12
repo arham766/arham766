@@ -1,2 +1,2 @@
-arham , cofounder and cto of tilion.dev
+arham , co-founder and cto of tilion.dev
 
